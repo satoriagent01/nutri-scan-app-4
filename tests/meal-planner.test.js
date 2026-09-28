@@ -1,253 +1,91 @@
-import { test, describe } from 'node:test';
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { MealPlanner } from '../src/meal-planner.js';
+import { createMeal, addProductToMeal, calculateMealTotals, createProduct } from '../src/meal-planner.js';
 
-describe('MealPlanner', () => {
-  test('creates a new meal planner', () => {
-    const planner = new MealPlanner();
-    assert.ok(planner);
-  });
+test('creates a meal with default date', () => {
+  const meal = createMeal('Desayuno');
+  assert.equal(meal.name, 'Desayuno');
+  assert.ok(meal.id);
+  assert.ok(meal.products.length === 0);
+  assert.ok(meal.date);
+});
 
-  test('adds a product to the planner', () => {
-    const planner = new MealPlanner();
-    const product = {
-      id: 'product-1',
-      name: 'Hazelnut Chocolate',
-      nutrition: {
-        energy: 2292,
-        fat: 33,
-        saturatedFat: 13,
-        carbohydrates: 55,
-        sugars: 45,
-        fiber: 2.4,
-        protein: 6.8,
-        salt: 0.18
-      }
-    };
-    
-    planner.addProduct(product);
-    assert.strictEqual(planner.products.size, 1);
-    assert.ok(planner.products.has('product-1'));
-  });
+test('creates a meal with custom date', () => {
+  const meal = createMeal('Almuerzo', '2024-01-15');
+  assert.equal(meal.date, '2024-01-15');
+});
 
-  test('adds a meal with a product and grams', () => {
-    const planner = new MealPlanner();
-    const product = {
-      id: 'product-1',
-      name: 'Hazelnut Chocolate',
-      nutrition: {
-        energy: 2292,
-        fat: 33,
-        saturatedFat: 13,
-        carbohydrates: 55,
-        sugars: 45,
-        fiber: 2.4,
-        protein: 6.8,
-        salt: 0.18
-      }
-    };
-    
-    planner.addProduct(product);
-    planner.addMeal('Lunch', 'product-1', 60);
-    
-    assert.strictEqual(planner.meals.size, 1);
-    assert.ok(planner.meals.has('Lunch'));
-  });
+test('adds a product to a meal', () => {
+  const meal = createMeal('Cena');
+  const product = createProduct('Chocolate Bar', {
+    energy: 549,
+    fat: 33,
+    carbs: 55,
+    sugar: 45,
+    protein: 6.8,
+    salt: 0.18,
+  }, '30');
 
-  test('calculates nutrition for a meal based on grams', () => {
-    const planner = new MealPlanner();
-    const product = {
-      id: 'product-1',
-      name: 'Hazelnut Chocolate',
-      nutrition: {
-        energy: 2292,
-        fat: 33,
-        saturatedFat: 13,
-        carbohydrates: 55,
-        sugars: 45,
-        fiber: 2.4,
-        protein: 6.8,
-        salt: 0.18
-      }
-    };
-    
-    planner.addProduct(product);
-    planner.addMeal('Lunch', 'product-1', 60);
-    
-    const mealNutrition = planner.getMealNutrition('Lunch');
-    
-    // 60g out of 100g = 0.6 multiplier
-    assert.strictEqual(mealNutrition.energy, 1375.2);
-    assert.strictEqual(mealNutrition.fat, 19.8);
-    assert.strictEqual(mealNutrition.saturatedFat, 7.8);
-    assert.strictEqual(mealNutrition.carbohydrates, 33);
-    assert.strictEqual(mealNutrition.sugars, 27);
-    assert.strictEqual(mealNutrition.fiber, 1.44);
-    assert.strictEqual(mealNutrition.protein, 4.08);
-    assert.strictEqual(mealNutrition.salt, 0.108);
-  });
+  addProductToMeal(meal, product, 30);
 
-  test('calculates total daily nutrition from all meals', () => {
-    const planner = new MealPlanner();
-    
-    const product1 = {
-      id: 'product-1',
-      name: 'Hazelnut Chocolate',
-      nutrition: {
-        energy: 2292,
-        fat: 33,
-        saturatedFat: 13,
-        carbohydrates: 55,
-        sugars: 45,
-        fiber: 2.4,
-        protein: 6.8,
-        salt: 0.18
-      }
-    };
-    
-    const product2 = {
-      id: 'product-2',
-      name: 'Apple Juice',
-      nutrition: {
-        energy: 199,
-        fat: 0,
-        saturatedFat: 0,
-        carbohydrates: 11,
-        sugars: 10,
-        fiber: 0.7,
-        protein: 0.4,
-        salt: 0
-      }
-    };
-    
-    planner.addProduct(product1);
-    planner.addProduct(product2);
-    planner.addMeal('Lunch', 'product-1', 60);
-    planner.addMeal('Lunch', 'product-2', 200);
-    planner.addMeal('Snack', 'product-1', 30);
-    
-    const total = planner.getTotalNutrition();
-    
-    // Lunch: 60g product1 + 200g product2
-    // Snack: 30g product1
-    // Total product1: 90g (0.9 multiplier)
-    // Total product2: 200g (2.0 multiplier)
-    
-    assert.strictEqual(total.energy, 1709.4);
-    assert.strictEqual(total.fat, 31.5);
-    assert.strictEqual(total.saturatedFat, 12.3);
-    assert.strictEqual(total.carbohydrates, 66.5);
-    assert.strictEqual(total.sugars, 57);
-    assert.strictEqual(total.fiber, 2.82);
-    assert.strictEqual(total.protein, 6.84);
-    assert.strictEqual(total.salt, 0.216);
-  });
+  assert.equal(meal.products.length, 1);
+  assert.equal(meal.products[0].productName, 'Chocolate Bar');
+  assert.equal(meal.products[0].grams, 30);
+});
 
-  test('removes a meal', () => {
-    const planner = new MealPlanner();
-    const product = {
-      id: 'product-1',
-      name: 'Hazelnut Chocolate',
-      nutrition: {
-        energy: 2292,
-        fat: 33,
-        saturatedFat: 13,
-        carbohydrates: 55,
-        sugars: 45,
-        fiber: 2.4,
-        protein: 6.8,
-        salt: 0.18
-      }
-    };
-    
-    planner.addProduct(product);
-    planner.addMeal('Lunch', 'product-1', 60);
-    planner.removeMeal('Lunch');
-    
-    assert.strictEqual(planner.meals.size, 0);
-  });
+test('calculates meal totals correctly', () => {
+  const meal = createMeal('Snack');
+  const product = createProduct('Chocolate Bar', {
+    energy: 549,
+    fat: 33,
+    carbs: 55,
+    sugar: 45,
+    protein: 6.8,
+    salt: 0.18,
+  }, '30');
 
-  test('removes a product', () => {
-    const planner = new MealPlanner();
-    const product = {
-      id: 'product-1',
-      name: 'Hazelnut Chocolate',
-      nutrition: {
-        energy: 2292,
-        fat: 33,
-        saturatedFat: 13,
-        carbohydrates: 55,
-        sugars: 45,
-        fiber: 2.4,
-        protein: 6.8,
-        salt: 0.18
-      }
-    };
-    
-    planner.addProduct(product);
-    planner.removeProduct('product-1');
-    
-    assert.strictEqual(planner.products.size, 0);
-  });
+  addProductToMeal(meal, product, 30);
+  const totals = calculateMealTotals(meal);
 
-  test('handles multiple products in a single meal', () => {
-    const planner = new MealPlanner();
-    
-    const product1 = {
-      id: 'product-1',
-      name: 'Rice',
-      nutrition: {
-        energy: 1300,
-        fat: 3,
-        saturatedFat: 0.8,
-        carbohydrates: 28,
-        sugars: 0.1,
-        fiber: 1.5,
-        protein: 2.5,
-        salt: 0.01
-      }
-    };
-    
-    const product2 = {
-      id: 'product-2',
-      name: 'Chicken',
-      nutrition: {
-        energy: 1650,
-        fat: 3.6,
-        saturatedFat: 1,
-        carbohydrates: 0,
-        sugars: 0,
-        fiber: 0,
-        protein: 27,
-        salt: 0.15
-      }
-    };
-    
-    planner.addProduct(product1);
-    planner.addProduct(product2);
-    planner.addMeal('Dinner', 'product-1', 150);
-    planner.addMeal('Dinner', 'product-2', 200);
-    
-    const mealNutrition = planner.getMealNutrition('Dinner');
-    
-    // 150g rice (1.5x) + 200g chicken (2x)
-    assert.strictEqual(mealNutrition.energy, 5575);
-    assert.strictEqual(mealNutrition.fat, 8.1);
-    assert.strictEqual(mealNutrition.saturatedFat, 2.6);
-    assert.strictEqual(mealNutrition.carbohydrates, 42);
-    assert.strictEqual(mealNutrition.sugars, 0.15);
-    assert.strictEqual(mealNutrition.fiber, 2.25);
-    assert.strictEqual(mealNutrition.protein, 60.5);
-    assert.strictEqual(mealNutrition.salt, 0.31);
-  });
+  assert.equal(totals.energy, 549);
+  assert.equal(totals.fat, 33);
+  assert.equal(totals.carbs, 55);
+  assert.equal(totals.sugar, 45);
+  assert.equal(totals.protein, 6.8);
+  assert.equal(totals.salt, 0.18);
+});
 
-  test('returns zero nutrition for empty meal', () => {
-    const planner = new MealPlanner();
-    const nutrition = planner.getMealNutrition('Empty');
-    
-    assert.strictEqual(nutrition.energy, 0);
-    assert.strictEqual(nutrition.fat, 0);
-    assert.strictEqual(nutrition.carbohydrates, 0);
-    assert.strictEqual(nutrition.protein, 0);
-  });
+test('scales nutrition by gram ratio', () => {
+  const meal = createMeal('Prueba');
+  const product = createProduct('Jugo', {
+    energy: 199,
+    fat: 0,
+    carbs: 11,
+    sugar: 10,
+    protein: 0.7,
+    salt: 0,
+  }, '100');
+
+  // Add 200ml (2x serving)
+  addProductToMeal(meal, product, 200);
+  const totals = calculateMealTotals(meal);
+
+  assert.equal(totals.energy, 398);
+  assert.equal(totals.carbs, 22);
+  assert.equal(totals.sugar, 20);
+});
+
+test('creates a product with nutrition data', () => {
+  const product = createProduct('Aceite de Oliva', {
+    energy: 828,
+    fat: 92,
+    carbs: 0,
+    protein: 0,
+    salt: 0,
+  }, '100');
+
+  assert.equal(product.name, 'Aceite de Oliva');
+  assert.equal(product.servingSize, '100');
+  assert.ok(product.id);
+  assert.equal(product.nutrition.energy, 828);
 });
