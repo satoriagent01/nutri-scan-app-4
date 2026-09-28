@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NutriScan - Nutrition Label Scanner</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>🍎 NutriScan</h1>
+      <p class="subtitle">Scan nutrition labels, track your diet</p>
+    </header>
+    
+    <nav class="tabs">
+      <button class="tab active" data-tab="scan">📷 Scan</button>
+      <button class="tab" data-tab="products">📦 Products</button>
+      <button class="tab" data-tab="meals">🍽️ Meals</button>
+    </nav>
+    
+    <main id="main-content">
+      <!-- Dynamic content loaded here -->
+    </main>
+  </div>
+
+  <!-- Hidden file input for image upload -->
+  <input type="file" id="file-input" accept="image/*" style="display:none">
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
